@@ -25,7 +25,9 @@
 
 #include "opustab.h"
 #include "opus_pvq.h"
-
+#ifdef B0
+#   undef B0
+#endif
 #define CELT_PVQ_U(n, k) (ff_celt_pvq_u_row[FFMIN(n, k)][FFMAX(n, k)])
 #define CELT_PVQ_V(n, k) (CELT_PVQ_U(n, k) + CELT_PVQ_U(n, (k) + 1))
 
@@ -495,12 +497,12 @@ static av_always_inline uint32_t quant_band_template(CeltPVQ *pvq, CeltFrame *f,
     uint32_t N0 = N;
     int N_B = N / blocks;
     int N_B0 = N_B;
-    int v_B0 = blocks;
+    int B0 = blocks;
     int time_divide = 0;
     int recombine = 0;
     int inv = 0;
     float mid = 0, side = 0;
-    int longblocks = (v_B0 == 1);
+    int longblocks = (B0 == 1);
     uint32_t cm = 0;
 
     if (N == 1) {
@@ -532,7 +534,7 @@ static av_always_inline uint32_t quant_band_template(CeltPVQ *pvq, CeltFrame *f,
         /* Band recombining to increase frequency resolution */
 
         if (lowband &&
-            (recombine || ((N_B & 1) == 0 && tf_change < 0) || v_B0 > 1)) {
+            (recombine || ((N_B & 1) == 0 && tf_change < 0) || B0 > 1)) {
             for (i = 0; i < N; i++)
                 lowband_scratch[i] = lowband[i];
             lowband = lowband_scratch;
@@ -556,13 +558,13 @@ static av_always_inline uint32_t quant_band_template(CeltPVQ *pvq, CeltFrame *f,
             time_divide++;
             tf_change++;
         }
-        v_B0 = blocks;
+        B0 = blocks;
         N_B0 = N_B;
 
         /* Reorganize the samples in time order instead of frequency order */
-        if (v_B0 > 1 && (quant || lowband))
+        if (B0 > 1 && (quant || lowband))
             celt_deinterleave_hadamard(pvq->hadamard_tmp, quant ? X : lowband,
-                                       N_B >> recombine, v_B0 << recombine,
+                                       N_B >> recombine, B0 << recombine,
                                        longblocks);
     }
 
@@ -604,7 +606,7 @@ static av_always_inline uint32_t quant_band_template(CeltPVQ *pvq, CeltFrame *f,
             if (quant) {
                 if (stereo && N > 2)
                     ff_opus_rc_enc_uint_step(rc, itheta, qn / 2);
-                else if (stereo || v_B0 > 1)
+                else if (stereo || B0 > 1)
                     ff_opus_rc_enc_uint(rc, itheta, qn + 1);
                 else
                     ff_opus_rc_enc_uint_tri(rc, itheta, qn);
@@ -619,7 +621,7 @@ static av_always_inline uint32_t quant_band_template(CeltPVQ *pvq, CeltFrame *f,
             } else {
                 if (stereo && N > 2)
                     itheta = ff_opus_rc_dec_uint_step(rc, qn / 2);
-                else if (stereo || v_B0 > 1)
+                else if (stereo || B0 > 1)
                     itheta = ff_opus_rc_dec_uint(rc, qn+1);
                 else
                     itheta = ff_opus_rc_dec_uint_tri(rc, qn);
@@ -725,7 +727,7 @@ static av_always_inline uint32_t quant_band_template(CeltPVQ *pvq, CeltFrame *f,
 
             /* Give more bits to low-energy MDCTs than they would
              * otherwise deserve */
-            if (v_B0 > 1 && !stereo && (itheta & 0x3fff)) {
+            if (B0 > 1 && !stereo && (itheta & 0x3fff)) {
                 if (itheta > 8192)
                     /* Rough approximation for pre-echo masking */
                     delta -= delta >> (4 - duration);
@@ -764,14 +766,14 @@ static av_always_inline uint32_t quant_band_template(CeltPVQ *pvq, CeltFrame *f,
                 cmt = pvq->quant_band(pvq, f, rc, band, Y, NULL, N, sbits, blocks,
                                       next_lowband2, duration, NULL, next_level,
                                       gain * side, NULL, fill >> blocks);
-                cm |= cmt << ((v_B0 >> 1) & (stereo - 1));
+                cm |= cmt << ((B0 >> 1) & (stereo - 1));
             } else {
                 /* For a stereo split, the high bits of fill are always zero,
                  * so no folding will be done to the side. */
                 cm = pvq->quant_band(pvq, f, rc, band, Y, NULL, N, sbits, blocks,
                                      next_lowband2, duration, NULL, next_level,
                                      gain * side, NULL, fill >> blocks);
-                cm <<= ((v_B0 >> 1) & (stereo - 1));
+                cm <<= ((B0 >> 1) & (stereo - 1));
                 rebalance = sbits - (rebalance - f->remaining2);
                 if (rebalance > 3 << 3 && itheta != 16384)
                     mbits += rebalance - (3 << 3);
@@ -842,13 +844,13 @@ static av_always_inline uint32_t quant_band_template(CeltPVQ *pvq, CeltFrame *f,
         int k;
 
         /* Undo the sample reorganization going from time order to frequency order */
-        if (v_B0 > 1)
+        if (B0 > 1)
             celt_interleave_hadamard(pvq->hadamard_tmp, X, N_B >> recombine,
-                                     v_B0 << recombine, longblocks);
+                                     B0 << recombine, longblocks);
 
         /* Undo time-freq changes that we did earlier */
         N_B = N_B0;
-        blocks = v_B0;
+        blocks = B0;
         for (k = 0; k < time_divide; k++) {
             blocks >>= 1;
             N_B <<= 1;

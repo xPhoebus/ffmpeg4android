@@ -51,7 +51,9 @@
 #include "aacenc_pred.h"
 
 #include "libavcodec/aaccoder_twoloop.h"
-
+#ifdef B0
+#   undef B0
+#endif
 /* Parameter of f(x) = a*(lambda/100), defines the maximum fourier spread
  * beyond which no PNS is used (since the SFBs contain tone rather than noise) */
 #define NOISE_SPREAD_THRESHOLD 0.9f
@@ -800,7 +802,7 @@ static void search_for_ms(AACEncContext *s, ChannelElement *cpe)
 
                 for (sid_sf_boost = 0; sid_sf_boost < 4; sid_sf_boost++) {
                     float dist1 = 0.0f, dist2 = 0.0f;
-                    int V_B0 = 0, B1 = 0;
+                    int B0 = 0, B1 = 0;
                     int minidx;
                     int mididx, sididx;
                     int midcb, sidcb;
@@ -862,12 +864,12 @@ static void search_for_ms(AACEncContext *s, ChannelElement *cpe)
                                                     sididx,
                                                     sidcb,
                                                     mslambda / (minthr * bmax), INFINITY, &b4, NULL, 0);
-                        V_B0 += b1+b2;
+                        B0 += b1+b2;
                         B1 += b3+b4;
                         dist1 -= b1+b2;
                         dist2 -= b3+b4;
                     }
-                    cpe->ms_mask[w*16+g] = dist2 <= dist1 && B1 < V_B0;
+                    cpe->ms_mask[w*16+g] = dist2 <= dist1 && B1 < B0;
                     if (cpe->ms_mask[w*16+g]) {
                         if (sce0->band_type[w*16+g] != NOISE_BT && sce1->band_type[w*16+g] != NOISE_BT) {
                             sce0->sf_idx[w*16+g] = mididx;
@@ -879,7 +881,7 @@ static void search_for_ms(AACEncContext *s, ChannelElement *cpe)
                             cpe->ms_mask[w*16+g] = 0;
                         }
                         break;
-                    } else if (B1 > V_B0) {
+                    } else if (B1 > B0) {
                         /* More boost won't fix this */
                         break;
                     }

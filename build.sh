@@ -1,5 +1,6 @@
 #!/bin/sh
 
+
 ROOT=$PWD
 OUTPUT=$ROOT/build.output
 SOURCE=$ROOT/build.temp/ffmpeg-4.0.2
@@ -43,8 +44,8 @@ cp -r $ROOT/patches/* .
 ./configure --prefix=$OUTPUT                                        \
             --enable-cross-compile                                  \
             --cross-prefix=$TOOLCHAIN/bin/arm-linux-androideabi-    \
-            --target-os=linux                                       \
-            --host-os=linux                                         \
+            --target-os=android                                     \
+            --host-os=darwin                                        \
             --arch=$ARCH                                            \
             --cpu=$CPU                                              \
             --sysroot=$SYSROOT                                      \
@@ -60,5 +61,5 @@ cp -r $ROOT/patches/* .
 
 
 if [ $? -eq 0 ]; then
-    make && make install
+    make -j 8 && make install
 fi
