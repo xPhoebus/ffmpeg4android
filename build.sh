@@ -4,14 +4,6 @@
 ROOT=$PWD
 OUTPUT=$ROOT/build.output
 
-NDK=~/Library/Android/sdk/ndk-bundle
-SYSROOT=$NDK/platforms/android-26/arch-arm/
-
-#如果是 linux，则 darwin-x86_64 改为 linux-x86_64, 没有环境，未验证
-TOOLCHAIN=$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64
-
-CFLAGS='-I$NDK/sysroot/usr/include -I$NDK/sysroot/usr/include/arm-linux-androideabi'
-
 if [ ! -d build.temp ]; then
     echo make build.temp
     mkdir build.temp
@@ -33,14 +25,12 @@ fi
 
 pushd ffmpeg-4.0.2
 
-
-
 cp -r $ROOT/patches/* .
 
 function make_ffmpeg() {
     ./configure --prefix=$OUTPUT/$ARCH                                  \
                 --enable-cross-compile                                  \
-                --cross-prefix=$TOOLCHAIN/bin/arm-linux-androideabi-    \
+                --cross-prefix=$CROSS_PREFIX                            \
                 --target-os=android                                     \
                 --host-os=darwin                                        \
                 --arch=$ARCH                                            \
@@ -63,15 +53,53 @@ function make_ffmpeg() {
     fi
 }
 
+
+NDK=~/Library/Android/sdk/ndk-bundle
+
+SYSROOT=$NDK/platforms/android-27/arch-arm/
+#如果是 linux，则 darwin-x86_64 改为 linux-x86_64, 没有环境，未验证
+TOOLCHAIN=$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64
+CROSS_PREFIX=$TOOLCHAIN/bin/arm-linux-androideabi-
+
 ARCH=armeabi-v7a
 CPU=arm9
 
 make_ffmpeg
 
-ARCH=arm64-v8a
-CPU=arm9
+
+# SYSROOT=$NDK/platforms/android-24/arch-arm64/
+# TOOLCHAIN=$NDK/toolchains/aarch64-linux-android-4.9/prebuilt/darwin-x86_64
+# CROSS_PREFIX=$TOOLCHAIN/bin/aarch64-linux-android-
+
+
+# ARCH=arm64-v8a
+# CPU=arm
+
+# make_ffmpeg
+
+# exit
+
+
+
+NDK=~/Library/Android/sdk/ndk-bundle
+SYSROOT=$NDK/platforms/android-26/arch-x86/
+
+#如果是 linux，则 darwin-x86_64 改为 linux-x86_64, 没有环境，未验证
+TOOLCHAIN=$NDK/toolchains/x86-4.9/prebuilt/darwin-x86_64
+CROSS_PREFIX=$TOOLCHAIN/bin/i686-linux-android-
+CFLAGS="-I$NDK/sysroot/usr/include -I$NDK/sysroot/usr/include/i686-linux-android"
+
+
+ARCH=x86
+CPU=x86
 
 make_ffmpeg
 
-exit
-aarch64-linux-android-4.9
+SYSROOT=$NDK/platforms/android-26/arch-x86_64/
+TOOLCHAIN=$NDK/toolchains/x86_64-4.9/prebuilt/darwin-x86_64
+CROSS_PREFIX=$TOOLCHAIN/bin/x86_64-linux-android-
+
+ARCH=x86_64
+CPU=x86_64
+
+make_ffmpeg

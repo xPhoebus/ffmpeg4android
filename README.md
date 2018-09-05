@@ -18,5 +18,5 @@ $NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/lib/gcc/arm-lin
 1. target_os 改为 android， 输出的 so 文件不再带有版本号等信息
 
 18.9.5
-1. 添加 armeabi-v7a 与 arm64-v8a 的编译，对 arm cpu 不太熟悉，虽然都编译通过，但是粗看结果，两个没什么区别
+1. 修改编译脚本，实现 armeabi-v7a， x86, x64 的编译, arm64 的编译失败，还需要研究
 
