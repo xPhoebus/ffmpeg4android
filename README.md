@@ -16,3 +16,7 @@ $NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/lib/gcc/arm-lin
 18.9.4
 1. 昨天关于 B0 的一些变量定义跟头文件冲突的问题，可以直接把 B0 undefine 一下就可以了，在相应出错的文件的最后一个 include 下添加上 #undef B0 即可, 参见 patches/libavcodec 下相关文件
 1. target_os 改为 android， 输出的 so 文件不再带有版本号等信息
+
+18.9.5
+1. 添加 armeabi-v7a 与 arm64-v8a 的编译，对 arm cpu 不太熟悉，虽然都编译通过，但是粗看结果，两个没什么区别
+
